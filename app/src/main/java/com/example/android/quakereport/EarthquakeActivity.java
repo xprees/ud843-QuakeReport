@@ -16,11 +16,17 @@
 package com.example.android.quakereport;
 
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.android.quakereport.data.Earthquake;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class EarthquakeActivity extends AppCompatActivity {
 
@@ -31,25 +37,27 @@ public class EarthquakeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
 
-        // Create a fake list of earthquake locations.
-        ArrayList<String> earthquakes = new ArrayList<>();
-        earthquakes.add("San Francisco");
-        earthquakes.add("London");
-        earthquakes.add("Tokyo");
-        earthquakes.add("Mexico City");
-        earthquakes.add("Moscow");
-        earthquakes.add("Rio de Janeiro");
-        earthquakes.add("Paris");
+        RecyclerView earthquakeRecView = (RecyclerView) findViewById(R.id.main_quake_recycle_view);
+        earthquakeRecView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        // Find a reference to the {@link ListView} in the layout
-        ListView earthquakeListView = (ListView) findViewById(R.id.list);
+        EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(this, createSampleData());
+        earthquakeRecView.setAdapter(adapter);
+    }
 
-        // Create a new {@link ArrayAdapter} of earthquakes
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                this, android.R.layout.simple_list_item_1, earthquakes);
-
-        // Set the adapter on the {@link ListView}
-        // so the list can be populated in the user interface
-        earthquakeListView.setAdapter(adapter);
+    @NonNull
+    private List<Earthquake> createSampleData() {
+        List<Earthquake> quakes = new ArrayList<>();
+        quakes.add(new Earthquake(4.0F, "New York, US", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(1.0F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(4.550F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(1.0F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(1.0F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(4.550F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
+        quakes.add(new Earthquake(4.550F, "New York", new Date(2021, 8, 25, 8, 20)));
+        return quakes;
     }
 }

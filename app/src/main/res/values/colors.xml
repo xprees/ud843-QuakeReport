@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2016 The Android Open Source Project
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright (C) 2016 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -22,4 +21,13 @@
 
     <!-- Accent color of the app -->
     <color name="colorAccent">#10CAC9</color>
+
+    <color name="pink">#FA15E2</color>
+    <color name="orange">#E65100</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Magnitude Badges colors -->
+    <color name="low_danger">#8BC34A</color>
+    <color name="mid_danger">#F57C00</color>
+    <color name="high_danger">#BF360C</color>
 </resources>

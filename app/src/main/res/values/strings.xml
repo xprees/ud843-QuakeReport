@@ -15,4 +15,9 @@
 -->
 <resources>
     <string name="app_name">Quake Report</string>
+    <string name="magnitude_placeholder">4.5</string>
+    <string name="quake_item_distance_placeholder">100KM NW OF</string>
+    <string name="quake_item_location_placeholder">New York, USA</string>
+    <string name="quake_item_date_placeholder">Jul 12, 2021</string>
+    <string name="quake_item_time_placeholder">8:00 AM</string>
 </resources>
