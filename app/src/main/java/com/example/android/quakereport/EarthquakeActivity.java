@@ -23,6 +23,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.quakereport.data.Earthquake;
+import com.example.android.quakereport.data.EarthquakeRecyclerViewAdapter;
+import com.example.android.quakereport.data.utils.QueryUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,24 +42,7 @@ public class EarthquakeActivity extends AppCompatActivity {
         RecyclerView earthquakeRecView = (RecyclerView) findViewById(R.id.main_quake_recycle_view);
         earthquakeRecView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(this, createSampleData());
+        EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(this, QueryUtils.extractEarthquakes(QueryUtils.SAMPLE_JSON_RESPONSE));
         earthquakeRecView.setAdapter(adapter);
-    }
-
-    @NonNull
-    private List<Earthquake> createSampleData() {
-        List<Earthquake> quakes = new ArrayList<>();
-        quakes.add(new Earthquake(4.0F, "New York, US", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(1.0F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(4.550F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(1.0F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(1.0F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(4.550F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(8.40F, "New York", new Date(2021, 8, 25, 8, 20)));
-        quakes.add(new Earthquake(4.550F, "New York", new Date(2021, 8, 25, 8, 20)));
-        return quakes;
     }
 }
