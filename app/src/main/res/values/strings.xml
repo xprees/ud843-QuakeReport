@@ -20,4 +20,5 @@
     <string name="quake_item_location_placeholder">New York, USA</string>
     <string name="quake_item_date_placeholder">Jul 12, 2021</string>
     <string name="quake_item_time_placeholder">8:00 AM</string>
+    <string name="quake_item_location_long_placeholder">very long name of a place or location</string>
 </resources>
