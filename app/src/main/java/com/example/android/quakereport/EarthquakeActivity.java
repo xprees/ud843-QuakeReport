@@ -15,9 +15,9 @@
  */
 package com.example.android.quakereport;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,22 +27,48 @@ import com.example.android.quakereport.data.EarthquakeRecyclerViewAdapter;
 import com.example.android.quakereport.data.utils.QueryUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class EarthquakeActivity extends AppCompatActivity {
 
+    private RecyclerView earthquakeRecView;
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
+
+    private static final String url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
 
-        RecyclerView earthquakeRecView = (RecyclerView) findViewById(R.id.main_quake_recycle_view);
+        earthquakeRecView = (RecyclerView) findViewById(R.id.main_quake_recycle_view);
         earthquakeRecView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(this, QueryUtils.extractEarthquakes(QueryUtils.SAMPLE_JSON_RESPONSE));
-        earthquakeRecView.setAdapter(adapter);
+        new QuakeAsyncTask().execute(url);
+
+    }
+
+    private class QuakeAsyncTask extends AsyncTask<String, Void, List<Earthquake>> {
+
+        @Override
+        protected List<Earthquake> doInBackground(String... strings) {
+            if (strings == null || strings.length <= 0) return null;
+            List<Earthquake> quakes = new ArrayList<>();
+            for (String urlText : strings) {
+                String response = QueryUtils.getJsonResponse(urlText);
+                quakes.addAll(QueryUtils.extractEarthquakes(response));
+            }
+            return quakes;
+        }
+
+        @Override
+        protected void onPostExecute(List<Earthquake> earthquakes) {
+            if (earthquakes == null || earthquakes.isEmpty()) {
+                return;
+            }
+            EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(EarthquakeActivity.this, earthquakes);
+            earthquakeRecView.setAdapter(adapter);
+            super.onPostExecute(earthquakes);
+        }
     }
 }
