@@ -15,11 +15,12 @@
  */
 package com.example.android.quakereport;
 
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.quakereport.data.Earthquake;
@@ -34,7 +35,7 @@ public class EarthquakeActivity extends AppCompatActivity {
     private RecyclerView earthquakeRecView;
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
 
-    private static final String url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
+    private static final String url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=3&limit=15";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +43,12 @@ public class EarthquakeActivity extends AppCompatActivity {
         setContentView(R.layout.earthquake_activity);
 
         earthquakeRecView = (RecyclerView) findViewById(R.id.main_quake_recycle_view);
-        earthquakeRecView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        int orientation = getResources().getConfiguration().orientation;
+        int cols = 1;
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            cols = 2;
+        }
+        earthquakeRecView.setLayoutManager(new GridLayoutManager(this, cols));
 
         new QuakeAsyncTask().execute(url);
 
