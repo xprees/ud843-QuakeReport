@@ -108,4 +108,14 @@ public class EarthquakeRecyclerViewAdapter extends RecyclerView.Adapter<Earthqua
             time = itemView.findViewById(R.id.earthquake_item_time_text);
         }
     }
+
+    public void clear() {
+        notifyItemRangeRemoved(0, earthquakes.size());
+        earthquakes.clear();
+    }
+
+    public void addAll(Collection<Earthquake> quakes) {
+        earthquakes.addAll(quakes);
+        notifyItemRangeInserted(0, quakes.size());
+    }
 }

@@ -16,65 +16,116 @@
 package com.example.android.quakereport;
 
 import android.content.res.Configuration;
-import android.os.AsyncTask;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.android.quakereport.data.Earthquake;
 import com.example.android.quakereport.data.EarthquakeRecyclerViewAdapter;
-import com.example.android.quakereport.data.utils.QueryUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-public class EarthquakeActivity extends AppCompatActivity {
+public class EarthquakeActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Earthquake>> {
+    public static final String LOG_TAG = EarthquakeActivity.class.getName();
+    private static final int QUAKE_LOADER_ID = 1;
 
     private RecyclerView earthquakeRecView;
-    public static final String LOG_TAG = EarthquakeActivity.class.getName();
+    private SwipeRefreshLayout refreshLayout;
+    private ProgressBar progressBar;
+    private TextView emptyView;
+    private boolean isConnected;
 
-    private static final String url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=3&limit=15";
+    private static final String URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=3&limit=15";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
-
+        refreshLayout = findViewById(R.id.refresh_layout);
+        progressBar = findViewById(R.id.progress_bar_circular);
         earthquakeRecView = (RecyclerView) findViewById(R.id.main_quake_recycle_view);
+        emptyView = findViewById(R.id.empty_view);
+
         int orientation = getResources().getConfiguration().orientation;
-        int cols = 1;
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            cols = 2;
-        }
+        int cols = orientation == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1;
         earthquakeRecView.setLayoutManager(new GridLayoutManager(this, cols));
+        EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(EarthquakeActivity.this, Collections.emptyList());
+        earthquakeRecView.setAdapter(adapter);
 
-        new QuakeAsyncTask().execute(url);
+        LoaderManager manager = LoaderManager.getInstance(this);
+        refreshLayout.setOnRefreshListener(() -> manager.initLoader(QUAKE_LOADER_ID, null, this));
 
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
+            // No Internet
+            emptyView.setText(R.string.no_connection);
+            emptyView.setVisibility(View.VISIBLE);
+            earthquakeRecView.setVisibility(View.GONE);
+            isConnected = false;
+        } else {
+            // Internet available
+            isConnected = true;
+            manager.initLoader(QUAKE_LOADER_ID, null, this);
+        }
     }
 
-    private class QuakeAsyncTask extends AsyncTask<String, Void, List<Earthquake>> {
+    @NonNull
+    @Override
+    public Loader<List<Earthquake>> onCreateLoader(int id, @Nullable Bundle args) {
+        Collection<String> urls = new ArrayList<>();
+        urls.add(URL);
+        refreshLayout.post(() -> refreshLayout.setRefreshing(true));
+        //progressBar.post(() -> progressBar.setVisibility(View.VISIBLE));
+        return new EarthquakeLoader(this, urls);
+    }
 
-        @Override
-        protected List<Earthquake> doInBackground(String... strings) {
-            if (strings == null || strings.length <= 0) return null;
-            List<Earthquake> quakes = new ArrayList<>();
-            for (String urlText : strings) {
-                String response = QueryUtils.getJsonResponse(urlText);
-                quakes.addAll(QueryUtils.extractEarthquakes(response));
+    @Override
+    public void onLoadFinished(@NonNull Loader<List<Earthquake>> loader, List<Earthquake> data) {
+        EarthquakeRecyclerViewAdapter adapter = (EarthquakeRecyclerViewAdapter) earthquakeRecView.getAdapter();
+        if (adapter == null) return;
+        adapter.clear();
+        if (data != null && !data.isEmpty()) {
+            // quakes loaded
+            adapter.addAll(data);
+            if (emptyView.getVisibility() != View.GONE) {
+                emptyView.setVisibility(View.GONE);
             }
-            return quakes;
+            if (earthquakeRecView.getVisibility() != View.VISIBLE) {
+                earthquakeRecView.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // No quakes
+            if (isConnected) {
+                emptyView.setText(R.string.no_quakes);
+            }
+            emptyView.setVisibility(View.VISIBLE);
+            earthquakeRecView.setVisibility(View.GONE);
         }
+        //progressBar.post(() -> progressBar.setVisibility(View.GONE));
+        refreshLayout.setRefreshing(false);
+    }
 
-        @Override
-        protected void onPostExecute(List<Earthquake> earthquakes) {
-            if (earthquakes == null || earthquakes.isEmpty()) {
-                return;
-            }
-            EarthquakeRecyclerViewAdapter adapter = new EarthquakeRecyclerViewAdapter(EarthquakeActivity.this, earthquakes);
-            earthquakeRecView.setAdapter(adapter);
-            super.onPostExecute(earthquakes);
+    @Override
+    public void onLoaderReset(@NonNull Loader<List<Earthquake>> loader) {
+        EarthquakeRecyclerViewAdapter adapter = (EarthquakeRecyclerViewAdapter) earthquakeRecView.getAdapter();
+        if (adapter != null) {
+            adapter.clear();
         }
     }
 }
