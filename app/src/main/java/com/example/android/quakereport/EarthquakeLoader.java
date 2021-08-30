@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class EarthquakeLoader extends AsyncTaskLoader<List<Earthquake>> {
     private static final String TAG = "QuakeLoader";
-    private final List<String> urls;
+    private List<String> urls;
 
     public EarthquakeLoader(@NonNull Context context, Collection<String> urls) {
         super(context);
@@ -41,5 +41,9 @@ public class EarthquakeLoader extends AsyncTaskLoader<List<Earthquake>> {
             quakes.addAll(QueryUtils.extractEarthquakes(response));
         }
         return Collections.unmodifiableList(quakes);
+    }
+    public void updateUrls(Collection<String> urls){
+        this.urls = new ArrayList<>(urls);
+        forceLoad();
     }
 }

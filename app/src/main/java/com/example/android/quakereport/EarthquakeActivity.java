@@ -15,10 +15,15 @@
  */
 package com.example.android.quakereport;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -28,6 +33,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -42,7 +48,7 @@ import java.util.List;
 
 public class EarthquakeActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Earthquake>> {
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
-    private static final int QUAKE_LOADER_ID = 1;
+    public static final int QUAKE_LOADER_ID = 1;
 
     private RecyclerView earthquakeRecView;
     private SwipeRefreshLayout refreshLayout;
@@ -50,7 +56,7 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
     private TextView emptyView;
     private boolean isConnected;
 
-    private static final String URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=3&limit=15";
+    private static final String URL = "https://earthquake.usgs.gov/fdsnws/event/1/query";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +74,9 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         earthquakeRecView.setAdapter(adapter);
 
         LoaderManager manager = LoaderManager.getInstance(this);
-        refreshLayout.setOnRefreshListener(() -> manager.initLoader(QUAKE_LOADER_ID, null, this));
+        refreshLayout.setOnRefreshListener(() -> {
+            manager.restartLoader(QUAKE_LOADER_ID, null, this);
+        });
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
@@ -85,14 +93,56 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.menu_settings) {
+            Intent intent = new Intent(EarthquakeActivity.this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     @NonNull
     @Override
     public Loader<List<Earthquake>> onCreateLoader(int id, @Nullable Bundle args) {
         Collection<String> urls = new ArrayList<>();
-        urls.add(URL);
+
+        urls.add(buildUrl());
         refreshLayout.post(() -> refreshLayout.setRefreshing(true));
         //progressBar.post(() -> progressBar.setVisibility(View.VISIBLE));
         return new EarthquakeLoader(this, urls);
+    }
+
+    @NonNull
+    private String buildUrl() {
+        // Obtain settings from shared preferences
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String minMagnitude = sharedPrefs.getString(
+                getString(R.string.settings_min_magnitude_key),
+                getString(R.string.settings_min_magnitude_default));
+        String orderBy = sharedPrefs.getString(
+                getString(R.string.settings_order_by_key),
+                getString(R.string.settings_order_by_default));
+        String limit = sharedPrefs.getString(
+                getString(R.string.settings_limit_key),
+                getString(R.string.settings_limit_default));
+
+        // Assemble request url
+        Uri baseUri = Uri.parse(URL);
+        Uri.Builder uriBuilder = baseUri.buildUpon();
+        uriBuilder.appendQueryParameter("format", "geojson");
+        uriBuilder.appendQueryParameter("limit", limit);
+        uriBuilder.appendQueryParameter("minmag", minMagnitude);
+        uriBuilder.appendQueryParameter("orderby", orderBy);
+
+        return uriBuilder.toString();
     }
 
     @Override
@@ -123,6 +173,10 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
 
     @Override
     public void onLoaderReset(@NonNull Loader<List<Earthquake>> loader) {
+        Collection<String> urls = new ArrayList<>();
+        urls.add(buildUrl());
+        if (loader instanceof EarthquakeLoader) ((EarthquakeLoader) loader).updateUrls(urls);
+
         EarthquakeRecyclerViewAdapter adapter = (EarthquakeRecyclerViewAdapter) earthquakeRecView.getAdapter();
         if (adapter != null) {
             adapter.clear();
