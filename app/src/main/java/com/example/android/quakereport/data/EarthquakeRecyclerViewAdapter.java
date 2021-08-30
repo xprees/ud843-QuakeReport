@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.icu.text.SimpleDateFormat;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.android.quakereport.EarthquakeDetailActivity;
 import com.example.android.quakereport.R;
 
 import java.util.ArrayList;
@@ -62,7 +62,9 @@ public class EarthquakeRecyclerViewAdapter extends RecyclerView.Adapter<Earthqua
         holder.time.setText(new SimpleDateFormat("hh:mm aaa", Locale.getDefault()).format(date));
 
         holder.magnitude.getRootView().setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(earthquake.getUrl()));
+            //Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(earthquake.getUrl()));
+            Intent intent = new Intent(context, EarthquakeDetailActivity.class);
+            intent.putExtra(EarthquakeDetailActivity.URL_KEY, earthquake.getUrl());
             context.startActivity(intent);
         });
     }
